@@ -1,17 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const db = require('./db'); // Import module kết nối cơ sở dữ liệu
+const db = require('./config/db'); // Import module kết nối cơ sở dữ liệu
 
+const customerRoutes = require('./routes/customer');
+const carRoutes = require('./routes/car');
 const app = express();
-const port = 3000;
+const port = 8000;
 
 // Body parser middleware
 app.use(bodyParser.json());
 
 // Routes
-const customerRoutes = require('./routes/customer');
 app.use('/api/customers', customerRoutes);
 
 app.listen(port, () => {
+  console.log("Hello Express")
   console.log(`Server running on port ${port}`);
 });
