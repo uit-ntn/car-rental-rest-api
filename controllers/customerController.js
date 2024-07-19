@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../configs/db');
 
 // Create Customer
 exports.createCustomer = (req, res) => {
@@ -41,3 +41,12 @@ exports.deleteCustomer = (req, res) => {
     res.status(200).send({ message: 'Customer deleted' });
   });
 };
+
+// Get All User
+exports.getAllUsers = (req, res) => {
+  const query = "SELECT * FROM USERS";
+  db.query(query, (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.status(200).send({ message: 'Data are getted' });
+  })
+}

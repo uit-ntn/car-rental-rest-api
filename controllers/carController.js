@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../configs/db');
 
 // Add Car
 exports.addCar = (req, res) => {
