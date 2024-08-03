@@ -21,6 +21,7 @@ connectDB();
 
 // Middleware
 app.use(cors());
+app.use(express.json)
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Sử dụng để parse x-www-form-urlencoded
 app.use(cookieParser());
