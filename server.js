@@ -2,28 +2,53 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const db = require('./configs/db');
+const cookieParser = require('cookie-parser');
+const connectDB = require('./configs/db');
+const morgan = require('morgan');
+const { engine } = require("express-handlebars");
 
 const customerRoutes = require('./routes/customer');
 const carRoutes = require('./routes/car');
 const authRoutes = require('./routes/authRoutes');
-const app = express();
-const port = 8000;
-
 
 dotenv.config();
 
-// Body parser middleware
+const app = express();
+const port = process.env.PORT || 8000;
+
+// connect database
+connectDB();
+
+// Middleware
 app.use(cors());
+app.use(express.json)
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // Sử dụng để parse x-www-form-urlencoded
+app.use(cookieParser());
+app.use(morgan('dev'));
 
+// Thiết lập thư mục tĩnh
+app.use(express.static('public'));
 
+// Template engine
+app.engine('handlebars', engine({ defaultLayout: 'main' }));
+app.set('view engine', 'handlebars');
+app.set('views', './views');
 
 // Routes
+app.get('/', (req, res) => {
+  res.render('index', { title: 'Trang Chủ', message: 'Chào mừng đến với Express.js!' });
+});
 app.use('/api/customers', customerRoutes);
+app.use('/api/cars', carRoutes);
 app.use('/api/auth', authRoutes);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
 app.listen(port, () => {
-  console.log("Hello Express")
   console.log(`Server running on port ${port}`);
 });

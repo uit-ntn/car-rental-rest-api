@@ -5,17 +5,21 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, default: 'customer' },
-  contact_info: {
-    phone: { type: String }
+  role: { type: String, enum: ['customer', 'sales', 'warehouse', 'admin'], default: 'customer' },
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  address: { type: String, required: true },
+  additional_info: {
+    // Thông tin bổ sung cho từng loại người dùng có thể được định nghĩa ở đây
   },
-  rental_history: [{ type: mongoose.Schema.Types.ObjectId, ref: 'RentalContract' }],
+  rental_history: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rental' }],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
-  rental_requests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Request' }]
+  rental_requests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Request' }],
+  owned_cars: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Car' }] // Thêm thuộc tính này
 });
 
 // Hash password before saving the user
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
