@@ -1,55 +1,46 @@
 const express = require('express');
+const { engine } = require('express-handlebars');
+const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const cookieParser = require('cookie-parser');
-const connectDB = require('./configs/db');
 const morgan = require('morgan');
-const { engine } = require("express-handlebars");
-
-const customerRoutes = require('./routes/customer');
+const dotenv = require('dotenv');
+const connectDB = require('./configs/db');
 const carRoutes = require('./routes/car');
-const authRoutes = require('./routes/authRoutes');
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8000;
 
-// connect database
+// Connect to database
 connectDB();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true })); // Sử dụng để parse x-www-form-urlencoded
-app.use(cookieParser());
-
-// http logger
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Thiết lập thư mục tĩnh
-app.use(express.static('public'));
+// Static files
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Template engine
+// Handlebars setup
 app.engine('handlebars', engine({
-  extname: 'handlebars',
+  extname: '.handlebars',
   defaultLayout: 'main',
-  layoutsDir: __dirname + '/resource/templates/views/layouts/',
-  partialsDir: __dirname + '/resource/templates/views/partials/'
+  layoutsDir: path.join(__dirname, 'resource/templates/views/layouts'),
+  partialsDir: path.join(__dirname, 'resource/templates/views/partials')
 }));
 app.set('view engine', 'handlebars');
-app.set('views', __dirname + '/resource/templates/views/');
+app.set('views', path.join(__dirname, 'resource/templates/views'));
 
 // Routes
-app.get('/', (req, res) => {
-  res.render('home', { message: "Hello Express" });
-});
-
-app.use('/api/customers', customerRoutes);
 app.use('/api/cars', carRoutes);
-app.use('/api/auth', authRoutes);
+
+app.get('/', (req, res) => {
+  res.render('home', { message: "Welcome to Car Management System" });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
