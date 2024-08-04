@@ -21,24 +21,32 @@ connectDB();
 
 // Middleware
 app.use(cors());
-app.use(express.json)
+app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Sử dụng để parse x-www-form-urlencoded
 app.use(cookieParser());
+
+// http logger
 app.use(morgan('dev'));
 
 // Thiết lập thư mục tĩnh
 app.use(express.static('public'));
 
 // Template engine
-app.engine('handlebars', engine({ defaultLayout: 'main' }));
+app.engine('handlebars', engine({
+  extname: 'handlebars',
+  defaultLayout: 'main',
+  layoutsDir: __dirname + '/resource/templates/views/layouts/',
+  partialsDir: __dirname + '/resource/templates/views/partials/'
+}));
 app.set('view engine', 'handlebars');
-app.set('views', './views');
+app.set('views', __dirname + '/resource/templates/views/');
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('index', { title: 'Trang Chủ', message: 'Chào mừng đến với Express.js!' });
+  res.render('home', { message: "Hello Express" });
 });
+
 app.use('/api/customers', customerRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/auth', authRoutes);
