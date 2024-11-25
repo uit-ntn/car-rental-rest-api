@@ -1,5 +1,4 @@
 const express = require('express');
-const { engine } = require('express-handlebars');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -22,24 +21,11 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Handlebars setup
-app.engine('handlebars', engine({
-  extname: '.handlebars',
-  defaultLayout: 'main',
-  layoutsDir: path.join(__dirname, 'resource/templates/views/layouts'),
-  partialsDir: path.join(__dirname, 'resource/templates/views/partials')
-}));
-app.set('view engine', 'handlebars');
-app.set('views', path.join(__dirname, 'resource/templates/views'));
-
 // Routes
 app.use('/api/cars', carRoutes);
 
 app.get('/', (req, res) => {
-  res.render('home', { message: "Welcome to Car Management System" });
+  return "Hello Express"
 });
 
 // Error handling middleware
