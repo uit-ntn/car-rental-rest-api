@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
   additional_info: {
     // Thông tin bổ sung cho từng loại người dùng có thể được định nghĩa ở đây
   },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   rental_history: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rental' }],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
   rental_requests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Request' }],

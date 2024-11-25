@@ -25,6 +25,7 @@
     "mongoose": "^8.5.1",
     "morgan": "^1.10.0",
     "mysql2": "^3.10.2",
+    "nodemailer": "^6.9.16",
     "nodemon": "^3.1.4"
   },
   "devDependencies": {
