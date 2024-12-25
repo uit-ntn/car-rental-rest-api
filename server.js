@@ -7,6 +7,8 @@ const dotenv = require('dotenv');
 const connectDB = require('./configs/db');
 const authRoutes = require('./routes/authRoutes');
 const carRoutes = require('./routes/carRoutes');
+const rentalRoutes = require('./routes/rentalRoutes');
+
 
 dotenv.config();
 
@@ -29,6 +31,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
+app.use('/api/rentals', rentalRoutes);
+
 
 
 // Error handling middleware
