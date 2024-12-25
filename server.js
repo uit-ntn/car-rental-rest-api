@@ -5,7 +5,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const connectDB = require('./configs/db');
-const carRoutes = require('./routes/car');
+const authRoutes = require('./routes/authRoutes');
+const carRoutes = require('./routes/carRoutes');
 
 dotenv.config();
 
@@ -22,11 +23,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Routes
-app.use('/api/cars', carRoutes);
-
 app.get('/', (req, res) => {
   return "Hello Express"
 });
+
+app.use('/api/auth', authRoutes);
+app.use('/api/cars', carRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

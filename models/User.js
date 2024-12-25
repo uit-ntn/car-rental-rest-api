@@ -9,15 +9,12 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String, required: true },
-  additional_info: {
-    // Thông tin bổ sung cho từng loại người dùng có thể được định nghĩa ở đây
-  },
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
   rental_history: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Rental' }],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
   rental_requests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Request' }],
-  owned_cars: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Car' }] // Thêm thuộc tính này
+  owned_cars: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Car' }]
 });
 
 // Hash password before saving the user
