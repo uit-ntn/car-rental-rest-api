@@ -50,3 +50,46 @@ exports.getAllRentals = async (req, res) => {
     res.status(500).json({ message: 'Error fetching rentals', error: error.message });
   }
 };
+
+
+// Get a rental by ID
+exports.getRentalById = async (req, res) => {
+  try {
+    const rental = await Rental.findById(req.params.id).populate('car_id customer_id sales_id');
+    if (!rental) {
+      return res.status(404).json({ message: 'Rental not found' });
+    }
+    res.status(200).json(rental);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching rental', error: error.message });
+  }
+};
+
+// Update rental status
+exports.updateRentalStatus = async (req, res) => {
+  try {
+    const rental = await Rental.findById(req.params.id);
+    if (!rental) {
+      return res.status(404).json({ message: 'Rental not found' });
+    }
+    rental.status = req.body.status || rental.status;
+    await rental.save();
+    res.status(200).json({ message: 'Rental status updated', rental });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating rental', error: error.message });
+  }
+};
+
+// Delete a rental
+exports.deleteRental = async (req, res) => {
+  try {
+    const rental = await Rental.findById(req.params.id);
+    if (!rental) {
+      return res.status(404).json({ message: 'Rental not found' });
+    }
+    await rental.remove();
+    res.status(200).json({ message: 'Rental deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting rental', error: error.message });
+  }
+};
