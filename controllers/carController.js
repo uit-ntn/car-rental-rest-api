@@ -43,7 +43,7 @@ exports.updateCar = async (req, res) => {
     }
     res.status(200).json({ message: 'Car updated successfully', car });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating car', error: error.message });
+    res.status(500).json({ message: 'Server error updating car', error: error.message });
   }
 };
 
@@ -59,3 +59,5 @@ exports.deleteCar = async (req, res) => {
     res.status(500).json({ message: 'Error deleting car', error: error.message });
   }
 };
+
+

@@ -42,4 +42,11 @@ exports.createRental = async (req, res) => {
 };
 
 // Get all rentals
-exports.getAllRentals = async (req, res)
+exports.getAllRentals = async (req, res) => {
+  try {
+    const rentals = await Rental.find().populate('car_id customer_id sales_id');
+    res.status(200).json(rentals);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
+  }
+};
