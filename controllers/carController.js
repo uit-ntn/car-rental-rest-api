@@ -60,4 +60,66 @@ exports.deleteCar = async (req, res) => {
   }
 };
 
+// Get cars by status
+exports.getCarsByStatus = async (req, res) => {
+  try {
+    const { status } = req.params;
+    const cars = await Car.find({ status });
+    res.status(200).json(cars);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching cars by status', error: error.message });
+  }
+};
+
+// Get cars by location
+exports.getCarsByLocation = async (req, res) => {
+  try {
+    const { location } = req.params;
+    const cars = await Car.find({ location });
+    res.status(200).json(cars);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching cars by location', error: error.message });
+  }
+};
+
+// Add a document to a car
+exports.addDocumentToCar = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    if (!car) {
+      return res.status(404).json({ message: 'Car not found' });
+    }
+    car.documents.push(req.body);
+    await car.save();
+    res.status(200).json({ message: 'Document added successfully', car });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding document', error: error.message });
+  }
+};
+
+// Update car's insurance info
+exports.updateInsuranceInfo = async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.id);
+    if (!car) {
+      return res.status(404).json({ message: 'Car not found' });
+    }
+    car.insurance_info = req.body;
+    await car.save();
+    res.status(200).json({ message: 'Insurance info updated successfully', car });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating insurance info', error: error.message });
+  }
+};
+
+// Get cars by owner ID
+exports.getCarsByOwner = async (req, res) => {
+  try {
+    const { owner_id } = req.params;
+    const cars = await Car.find({ owner_id });
+    res.status(200).json(cars);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching cars by owner', error: error.message });
+  }
+};
 
