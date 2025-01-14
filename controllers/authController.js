@@ -2,6 +2,8 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const sentMail = require('../configs/mailer');
+const jwt = require('jsonwebtoken');
+
 
 
 exports.signup = async (req, res) => {
@@ -35,9 +37,9 @@ exports.login = async (req, res) => {
       }
 
       // return token and user ID 
-      const token = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+      const token = jwt.sign({ user_id: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
-      res.json({ token, user_id: user.user_id });
+      res.json({ token, _id: user._id });
   } catch (error) {
       res.status(500).json({ msg: 'Lỗi server' });
   }
