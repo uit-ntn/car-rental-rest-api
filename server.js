@@ -27,6 +27,7 @@ app.use(morgan('dev'));
 
 // Routes
 app.get('/', (req, res) => {
+  res.send('Server is running!');
   return "Hello Express"
 });
 
@@ -43,6 +44,6 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
