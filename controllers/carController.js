@@ -1,4 +1,5 @@
 const Car = require('../models/Car');
+const mongoose = require('mongoose');
 
 // Create a new car
 exports.createCar = async (req, res) => {
@@ -21,16 +22,20 @@ exports.getAllCars = async (req, res) => {
   }
 };
 
-// Get a single car by ID
 exports.getCarById = async (req, res) => {
   try {
-    const car = await Car.findById(req.params.id);
+    const carId = req.params.id;
+
+    const car = await Car.findById(carId);
+
     if (!car) {
-      return res.status(404).json({ message: 'Car not found' });
+      return res.status(404).json({ error: 'Car not found' });
     }
+
     res.status(200).json(car);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching car', error: error.message });
+    console.error('Error fetching car by ID:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
