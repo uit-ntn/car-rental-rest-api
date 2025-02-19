@@ -5,7 +5,7 @@ const User = require('../models/User');
 // Create a new rental
 exports.createRental = async (req, res) => {
   try {
-    const { car_id, customer_id, sales_id, start_date, end_date, total_cost } = req.body;
+    const { car_id, customer_id, start_date, end_date, total_cost } = req.body;
 
     // Check if the car is available
     const car = await Car.findById(car_id);
@@ -20,8 +20,6 @@ exports.createRental = async (req, res) => {
     const rental = new Rental({
       car_id,
       customer_id,
-      car_owner_id: car.owner_id,
-      sales_id,
       start_date,
       end_date,
       total_cost,
@@ -40,22 +38,57 @@ exports.createRental = async (req, res) => {
     res.status(500).json({ message: 'Error creating rental', error: error.message });
   }
 };
-
 // Get all rentals
 exports.getAllRentals = async (req, res) => {
   try {
-    const rentals = await Rental.find().populate('car_id customer_id sales_id');
-    res.status(200).json(rentals);
+    const rentals = await Rental.find();
+    const rentalList = [];
+
+    for (const rental of rentals) {
+      const car = await Car.findById(rental.car_id);
+      const customer = await User.findById(rental.customer_id);
+
+      // Check if car or customer is not found
+      if (!car) {
+        console.log('Car with ID', rental.car_id, 'not found');
+        // Bỏ qua hợp đồng không có xe
+        continue;
+      }
+      if (!customer) {
+
+        console.log('Customer with ID', rental.customer_id, 'not found');
+        // Bỏ qua hợp đồng không có khách hàng
+        continue;
+      }
+
+      // Format rental data
+      const rentalData = {
+        _id: rental._id,
+        car_id: rental.car_id,
+        carInfo: `${car.model} ${car.make} ${car.year}`,
+        customer_id: rental.customer_id,
+        customerInfo: customer.full_name,
+        start_date: rental.start_date,
+        end_date: rental.end_date,
+        total_cost: rental.total_cost,
+        status: rental.status
+      };
+      rentalList.push(rentalData);
+    }
+
+    res.status(200).json(rentalList);
   } catch (error) {
+    console.error(error);  // Log the full error for debugging
     res.status(500).json({ message: 'Error fetching rentals', error: error.message });
   }
 };
 
 
+
 // Get a rental by ID
 exports.getRentalById = async (req, res) => {
   try {
-    const rental = await Rental.findById(req.params.id).populate('car_id customer_id sales_id');
+    const rental = await Rental.findById(req.params.id);
     if (!rental) {
       return res.status(404).json({ message: 'Rental not found' });
     }
@@ -83,13 +116,62 @@ exports.updateRentalStatus = async (req, res) => {
 // Delete a rental
 exports.deleteRental = async (req, res) => {
   try {
-    const rental = await Rental.findById(req.params.id);
+    const rental = await Rental.findByIdAndDelete(req.params.id);
+
+    // Update car status to 'available'
+    const car = await Car.findById(rental.car_id);
+    car.status = 'available';
+    await car.save();
+
     if (!rental) {
       return res.status(404).json({ message: 'Rental not found' });
     }
-    await rental.remove();
     res.status(200).json({ message: 'Rental deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting rental', error: error.message });
   }
 };
+
+// Get all rentals by customer ID
+exports.getRentalsByCustomerId = async (req, res) => {
+  try {
+    const rentals = await Rental.find({ customer_id: req.params.id });
+    res.status(200).json(rentals);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
+  }
+};
+
+// Get all rentals by car ID
+exports.getRentalsByCarId = async (req, res) => {
+  try {
+    const rentals = await Rental.find({ car_id: req.params.id });
+    res.status(200).json(rentals);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
+  }
+}
+
+// Get all active rentals
+exports.getActiveRentals = async (req, res) => {
+  try {
+    const rentals = await Rental.find({ status: 'active' });
+    res.status(200).json(rentals);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
+  }
+};
+
+
+// Get all pending rentals
+exports.getPendingRentals = async (req, res) => {
+  try {
+    const rentals = await Rental.find({ status: 'pending' });
+    res.status(200).json(rentals);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
+  }
+};
+
+
+// 
