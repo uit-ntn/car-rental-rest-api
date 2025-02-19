@@ -5,7 +5,7 @@ const User = require('../models/User');
 // Create a new rental
 exports.createRental = async (req, res) => {
   try {
-    const { car_id, customer_id, sales_id, start_date, end_date, total_cost } = req.body;
+    const { car_id, customer_id, start_date, end_date, total_cost } = req.body;
 
     // Check if the car is available
     const car = await Car.findById(car_id);
@@ -20,8 +20,6 @@ exports.createRental = async (req, res) => {
     const rental = new Rental({
       car_id,
       customer_id,
-      car_owner_id: car.owner_id,
-      sales_id,
       start_date,
       end_date,
       total_cost,
@@ -44,7 +42,7 @@ exports.createRental = async (req, res) => {
 // Get all rentals
 exports.getAllRentals = async (req, res) => {
   try {
-    const rentals = await Rental.find().populate('car_id customer_id sales_id');
+    const rentals = await Rental.find();
     res.status(200).json(rentals);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching rentals', error: error.message });
@@ -55,7 +53,7 @@ exports.getAllRentals = async (req, res) => {
 // Get a rental by ID
 exports.getRentalById = async (req, res) => {
   try {
-    const rental = await Rental.findById(req.params.id).populate('car_id customer_id sales_id');
+    const rental = await Rental.findById(req.params.id);
     if (!rental) {
       return res.status(404).json({ message: 'Rental not found' });
     }
@@ -83,13 +81,13 @@ exports.updateRentalStatus = async (req, res) => {
 // Delete a rental
 exports.deleteRental = async (req, res) => {
   try {
-    const rental = await Rental.findById(req.params.id);
+    const rental = await Rental.findByIdAndDelete(req.params.id);
     if (!rental) {
       return res.status(404).json({ message: 'Rental not found' });
     }
-    await rental.remove();
     res.status(200).json({ message: 'Rental deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting rental', error: error.message });
   }
 };
+
