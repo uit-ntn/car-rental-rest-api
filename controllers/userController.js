@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Car = require('../models/Car');
+const Rental = require('../models/Rental');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -19,25 +21,25 @@ exports.getUserById = async (req, res) => {
     }
     res.status(200).json(user);
   } catch (error) {
+    console.error('Lỗi khi lấy thông tin người dùng theo ID:', error);
     res.status(500).json({ message: 'Lỗi khi lấy thông tin người dùng', error });
   }
 };
 
 // Create a new user (Admin Only)
 exports.createUser = async (req, res) => {
-  const { username, email, password, role, name, phone, address } = req.body;
+  const { email, password, role, full_name, phone, address } = req.body;
   try {
-    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    const existingUser = await User.findOne({ $or: [{ email }] });
     if (existingUser) {
       return res.status(400).json({ message: 'Tên người dùng hoặc email đã tồn tại' });
     }
 
     const newUser = new User({
-      username,
       email,
       password,
       role,
-      name,
+      full_name,
       phone,
       address,
     });
@@ -71,47 +73,38 @@ exports.updateUser = async (req, res) => {
 // Delete user (Admin Only)
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng' });
     }
-
+    const rentals = await Rental.getRentalsByCustomerId(req.params.id);
+    rentals.forEach(async (rental) => {
+      const car = await Car.findById(rental.car_id);
+      if (car)
+        car.status = 'available';
+      await car.save();
+    });
+    await User.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Người dùng đã bị xóa thành công' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi xóa người dùng', error });
   }
 };
 
-// Add a rental history to a user
-exports.addRentalHistory = async (req, res) => {
+
+// Get all rentals by customer ID
+exports.getRentalsByCustomerId = async (req, res) => {
   try {
-    const { rentalId } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    const rentals = await Rental.find({ customer_id: req.params.id });
+    rentals.forEach(async (rental) => {
+      const car = await Car.findById(rental.car_id);
+      rental.car = car;
+      console.log(rental);
     }
-    user.rental_history.push(rentalId);
-    await user.save();
-    res.status(200).json(user);
+    );
+    res.status(200).json(rentals);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi thêm lịch sử thuê xe', error });
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách thuê xe', error });
   }
 };
 
-// Remove a rental history from a user
-exports.removeRentalHistory = async (req, res) => {
-  try {
-    const { rentalId } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
-    }
-    user.rental_history = user.rental_history.filter(
-      (history) => history.toString() !== rentalId
-    );
-    await user.save();
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi xóa lịch sử thuê xe', error });
-  }
-};

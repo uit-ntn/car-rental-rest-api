@@ -1,5 +1,5 @@
 const Car = require('../models/Car');
-const mongoose = require('mongoose');
+const Rental = require('../models/Rental');
 
 // Create a new car
 exports.createCar = async (req, res) => {
@@ -22,16 +22,14 @@ exports.getAllCars = async (req, res) => {
   }
 };
 
+// Get car by ID
 exports.getCarById = async (req, res) => {
   try {
     const carId = req.params.id;
-
     const car = await Car.findById(carId);
-
     if (!car) {
       return res.status(404).json({ error: 'Car not found' });
     }
-
     res.status(200).json(car);
   } catch (error) {
     console.error('Error fetching car by ID:', error);
@@ -39,66 +37,58 @@ exports.getCarById = async (req, res) => {
   }
 };
 
-// Update a car by ID
 exports.updateCar = async (req, res) => {
   try {
-    const car = await Car.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const carId = req.params.id;  // Get the car ID from the URL parameters
+    const car = await Car.findById(carId);  // Find the car by ID
+
     if (!car) {
       return res.status(404).json({ message: 'Car not found' });
     }
+    const carData = req.body;  // Get the updated car data from the request body
+
+    // Only handle rental contracts if the car is available
+    if (carData.status === 'available') {
+      // Check for any rental contracts with status 'Đang thuê' or start date in the future
+      const rentals = await Rental.find({
+        car_id: carId,
+        $or: [
+          { status: 'Đang thuê' },  // Currently rented
+          { start_date: { $gte: new Date() } }  // Future rentals
+        ]
+      });
+
+      // If rentals are found, delete them
+      if (rentals.length > 0) {
+        await Rental.deleteMany({ car_id: carId, _id: { $in: rentals.map(r => r._id) } });
+        console.log('Deleted rentals:', rentals);
+      }
+    }
+    await Car.findByIdAndUpdate
+      (carId, carData, { new: true, runValidators: true });
     res.status(200).json({ message: 'Car updated successfully', car });
   } catch (error) {
     res.status(500).json({ message: 'Server error updating car', error: error.message });
   }
 };
 
+
 // Delete a car by ID
 exports.deleteCar = async (req, res) => {
-  try {
-    const car = await Car.findByIdAndDelete(req.params.id);
-    if (!car) {
-      return res.status(404).json({ message: 'Car not found' });
-    }
-    res.status(200).json({ message: 'Car deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting car', error: error.message });
-  }
-};
-
-// Get cars by status
-exports.getCarsByStatus = async (req, res) => {
-  try {
-    const { status } = req.params;
-    const cars = await Car.find({ status });
-    res.status(200).json(cars);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching cars by status', error: error.message });
-  }
-};
-
-// Get cars by location
-exports.getCarsByLocation = async (req, res) => {
-  try {
-    const { location } = req.params;
-    const cars = await Car.find({ location });
-    res.status(200).json(cars);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching cars by location', error: error.message });
-  }
-};
-
-// Add a document to a car
-exports.addDocumentToCar = async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
     if (!car) {
       return res.status(404).json({ message: 'Car not found' });
     }
-    car.documents.push(req.body);
-    await car.save();
-    res.status(200).json({ message: 'Document added successfully', car });
+    const rentals = await Rental.find({ car_id: req.params.id });
+    rentals.forEach(async (rental) => {
+      await Rental.findByIdAndDelete(rental._id);
+    }
+    );
+    await Car.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Car deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding document', error: error.message });
+    res.status(500).json({ message: 'Error deleting car', error: error.message });
   }
 };
 
@@ -117,14 +107,4 @@ exports.updateInsuranceInfo = async (req, res) => {
   }
 };
 
-// Get cars by owner ID
-exports.getCarsByOwner = async (req, res) => {
-  try {
-    const { owner_id } = req.params;
-    const cars = await Car.find({ owner_id });
-    res.status(200).json(cars);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching cars by owner', error: error.message });
-  }
-};
 
