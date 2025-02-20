@@ -8,6 +8,7 @@ exports.createCar = async (req, res) => {
     await car.save();
     res.status(201).json({ message: 'Car created successfully', car });
   } catch (error) {
+    console.log('Error creating car:', error);
     res.status(500).json({ message: 'Error creating car', error: error.message });
   }
 };
@@ -68,6 +69,7 @@ exports.updateCar = async (req, res) => {
       (carId, carData, { new: true, runValidators: true });
     res.status(200).json({ message: 'Car updated successfully', car });
   } catch (error) {
+    console.error('Error updating car:', error);
     res.status(500).json({ message: 'Server error updating car', error: error.message });
   }
 };
