@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/userController');
 
-router.get('/', UserController.getAllUsers);
-router.get('/:id', UserController.getUserById);
-router.post('/', UserController.createUser);
-router.put('/:id', UserController.updateUser);
-router.delete('/:id', UserController.deleteUser);
-router.post('/:id/rental-history', UserController.addRentalHistory);
-router.delete('/:id/rental-history', UserController.removeRentalHistory);
+// User routes
+router.get('/', UserController.getAllUsers); // Get all users
+router.get('/:id', UserController.getUserById); // Get a user by ID
+router.post('/', UserController.createUser); // Create a new user
+router.put('/:id', UserController.updateUser); // Update user information
+router.delete('/:id', UserController.deleteUser); // Delete a user
+router.get('/:id/rentals', UserController.getRentalsByCustomerId); // Get rentals by user ID
 
 module.exports = router;

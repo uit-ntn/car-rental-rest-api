@@ -19,9 +19,9 @@ const carSchema = new mongoose.Schema({
     required: true 
   },
   insurance_info: {
-    policy_number: { type: String, required: true },
-    expiration_date: { type: Date, required: true },
-    company: { type: String, required: true }
+    policy_number: { type: String },
+    expiration_date: { type: Date},
+    company: { type: String }
   }
 });
 

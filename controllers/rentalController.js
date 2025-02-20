@@ -12,7 +12,7 @@ exports.createRental = async (req, res) => {
     if (!car) {
       return res.status(404).json({ message: 'Car not found' });
     }
-    if (car.status !== 'available') {
+    if (car.status !== 'rented' && car.status !== 'maintenance') {
       return res.status(400).json({ message: 'Car is not available for rental' });
     }
 
@@ -38,6 +38,7 @@ exports.createRental = async (req, res) => {
     res.status(500).json({ message: 'Error creating rental', error: error.message });
   }
 };
+
 // Get all rentals
 exports.getAllRentals = async (req, res) => {
   try {
@@ -92,7 +93,20 @@ exports.getRentalById = async (req, res) => {
     if (!rental) {
       return res.status(404).json({ message: 'Rental not found' });
     }
-    res.status(200).json(rental);
+    const userInfo = await User.findById(rental.customer_id);
+    const carInfo = await Car.findById(rental.car_id);
+    const rentalData = {
+      _id: rental._id,
+      car_id: rental.car_id,
+      carInfo: `${carInfo.make} ${carInfo.model} ${carInfo.year}`,
+      customer_id: rental.customer_id,
+      customerInfo: userInfo.full_name,
+      start_date: rental.start_date,
+      end_date: rental.end_date,
+      total_cost: rental.total_cost,
+      status: rental.status
+    };
+    res.status(200).json(rentalData);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching rental', error: error.message });
   }
@@ -103,9 +117,19 @@ exports.updateRentalStatus = async (req, res) => {
   try {
     const rental = await Rental.findById(req.params.id);
     if (!rental) {
-      return res.status(404).json({ message: 'Rental not found' });
+      return res.status(404).json({ message: 'Contract not found' });
     }
-    rental.status = req.body.status || rental.status;
+    if (rental.status === 'pending' && req.body.status === 'active') {
+      const car = await Car.findById(rental.car_id);
+      car.status = 'rented';
+      await car.save();
+    }
+    else {
+      const car = await Car.findById(rental.car_id);
+      car.status = 'available';
+      await car.save();
+    }
+    rental.status = req.body.status;
     await rental.save();
     res.status(200).json({ message: 'Rental status updated', rental });
   } catch (error) {
@@ -152,26 +176,5 @@ exports.getRentalsByCarId = async (req, res) => {
   }
 }
 
-// Get all active rentals
-exports.getActiveRentals = async (req, res) => {
-  try {
-    const rentals = await Rental.find({ status: 'active' });
-    res.status(200).json(rentals);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
-  }
-};
 
 
-// Get all pending rentals
-exports.getPendingRentals = async (req, res) => {
-  try {
-    const rentals = await Rental.find({ status: 'pending' });
-    res.status(200).json(rentals);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching rentals', error: error.message });
-  }
-};
-
-
-// 
