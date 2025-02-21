@@ -5,16 +5,32 @@ const User = require('../models/User');
 // Create a new rental
 exports.createRental = async (req, res) => {
   try {
-    const { car_id, customer_id, start_date, end_date, total_cost } = req.body;
+    const { car_id, customer_id, start_date, end_date } = req.body;
 
     // Check if the car is available
     const car = await Car.findById(car_id);
-    if (!car) {
-      return res.status(404).json({ message: 'Car not found' });
+    const customer = await User.findById(customer_id);
+    if (!car || !customer) {
+      if (!car) console.log(`Car : ${car_id}  not found`);
+      if (!customer) console.log(`Customer ${customer_id} not found`);
+      console.log('Car or customer not found');
+      return res.status(404).json({ message: 'Car or customer not found' });
     }
-    if (car.status !== 'rented' && car.status !== 'maintenance') {
+    if (car.status == 'rented' || car.status == 'maintenance') {
+      console.log('Car is not available for rental');
       return res.status(400).json({ message: 'Car is not available for rental' });
     }
+
+    // check if the start date is before the end date
+    if (new Date(start_date) >= new Date(end_date) && new Date(start_date) >= new Date()) {
+      console.log('Invalid rental dates, end date must be higher start date');
+      return res.status(400).json({ message: 'Invalid rental dates,end date must be higher start date' });
+    }
+
+    // Calculate total cost
+    const timeDiff = Math.abs(new Date(end_date) - new Date(start_date));
+    const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    const total_cost = diffDays * car.price;
 
     // Create rental
     const rental = new Rental({
@@ -23,7 +39,7 @@ exports.createRental = async (req, res) => {
       start_date,
       end_date,
       total_cost,
-      status: 'pending' // Default status
+      status: 'Chờ duyệt'
     });
 
     // Save rental
@@ -35,6 +51,7 @@ exports.createRental = async (req, res) => {
 
     res.status(201).json({ message: 'Rental created successfully', rental });
   } catch (error) {
+    console.error(error);  // Log the full error for debugging
     res.status(500).json({ message: 'Error creating rental', error: error.message });
   }
 };
@@ -91,6 +108,7 @@ exports.getRentalById = async (req, res) => {
   try {
     const rental = await Rental.findById(req.params.id);
     if (!rental) {
+      console.log('Rental not found');
       return res.status(404).json({ message: 'Rental not found' });
     }
     const userInfo = await User.findById(rental.customer_id);
@@ -133,6 +151,7 @@ exports.updateRentalStatus = async (req, res) => {
     await rental.save();
     res.status(200).json({ message: 'Rental status updated', rental });
   } catch (error) {
+    console.error(error)
     res.status(500).json({ message: 'Error updating rental', error: error.message });
   }
 };
@@ -176,5 +195,26 @@ exports.getRentalsByCarId = async (req, res) => {
   }
 }
 
+// Update rental by ID
+exports.updateRental = async (req, res) => {
+  try {
+    const rental = await Rental.findByIdAndUpdate(req.params.id)
+    if (!rental) {
+      return res.status(404).json({ message: 'Rental not found' });
+    }
+    const car = await Car.findById(rental.car_id);
+    if (car.status === 'rented') {
+      car.status = 'available';
+      await car.save();
+    }
+    const updatedRental = await Rental.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const carUpdate = await Car.findByIdAndUpdate(updatedRental.car_id, { status: 'rented' }, { new: true });
+
+    res.status(200).json({ message: 'Rental updated successfully', updatedRental });
+  }
+  catch (error) {
+    res.status(500).json({ message: 'Error updating rental', error: error.message });
+  }
+}
 
 
