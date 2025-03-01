@@ -54,7 +54,64 @@ exports.createRental = async (req, res) => {
     console.error(error);  // Log the full error for debugging
     res.status(500).json({ message: 'Error creating rental', error: error.message });
   }
+};// Create a new rental
+exports.createRental = async (req, res) => {
+    try {
+        const { car_id, customer_id, start_date, end_date } = req.body;
+
+        // Kiểm tra nếu customer_id không hợp lệ
+        if (!customer_id) {
+            return res.status(400).json({ message: 'Customer ID is required' });
+        }
+
+        const car = await Car.findById(car_id);
+        const customer = await User.findById(customer_id);
+
+        if (!car || !customer) {
+            if (!car) console.log(`Car : ${car_id} not found`);
+            if (!customer) console.log(`Customer ${customer_id} not found`);
+            return res.status(404).json({ message: 'Car or customer not found' });
+        }
+
+        if (car.status === 'rented' || car.status === 'maintenance') {
+            console.log('Car is not available for rental');
+            return res.status(400).json({ message: 'Car is not available for rental' });
+        }
+
+        // Kiểm tra nếu ngày bắt đầu nhỏ hơn ngày kết thúc
+        if (new Date(start_date) >= new Date(end_date) || new Date(start_date) < new Date()) {
+            return res.status(400).json({ message: 'Invalid rental dates, end date must be higher start date' });
+        }
+
+        // Tính toán chi phí
+        const timeDiff = Math.abs(new Date(end_date) - new Date(start_date));
+        const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        const total_cost = diffDays * car.price;
+
+        // Tạo rental
+        const rental = new Rental({
+            car_id,
+            customer_id,
+            start_date,
+            end_date,
+            total_cost,
+            status: 'Chờ duyệt'
+        });
+
+        // Lưu rental
+        await rental.save();
+
+        // Cập nhật trạng thái xe
+        car.status = 'rented';
+        await car.save();
+
+        res.status(201).json({ message: 'Rental created successfully', rental });
+    } catch (error) {
+        console.error(error);  // Log lỗi chi tiết
+        res.status(500).json({ message: 'Error creating rental', error: error.message });
+    }
 };
+
 
 // Get all rentals
 exports.getAllRentals = async (req, res) => {
