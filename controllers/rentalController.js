@@ -236,7 +236,23 @@ exports.deleteRental = async (req, res) => {
 exports.getRentalsByCustomerId = async (req, res) => {
   try {
     const rentals = await Rental.find({ customer_id: req.params.id });
-    res.status(200).json(rentals);
+    const carData = [];
+    for (const rental of rentals) {
+      const car = await Car.findById(rental.car_id);
+      carData.push({
+        _id: car._id,
+        make: car.make,
+        model: car.model,
+        year: car.year,
+        image: car.image,
+        price: car.price,
+        start_date: rental.start_date,
+        end_date: rental.end_date,
+        total_cost: rental.total_cost,
+        status: rental.status
+      });
+    }
+    res.status(200).json(carData);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching rentals', error: error.message });
   }
