@@ -5,7 +5,7 @@ const User = require('../models/User');
 // Create a new comment
 exports.createComment = async (req, res) => {
     try {
-        const { user_id, car_id, content, rating } = req.body;
+        const { user_id, car_id, content, rating, user_name } = req.body;
 
         // Check if the car and user exist
         const car = await Car.findById(car_id);
@@ -28,7 +28,8 @@ exports.createComment = async (req, res) => {
             user_id,
             car_id,
             content,
-            rating
+            rating,
+            user_name
         });
 
         // Save comment
@@ -51,3 +52,34 @@ exports.getAllComments = async (req, res) => {
         res.status(500).json({ message: 'Error fetching comments', error: error.message });
     }
 };
+
+
+// Get comments by car_id
+exports.getCommentsByCarId = async (req, res) => {
+    try {
+        const { car_id } = req.params;
+        const comments = await Comment.find({ car_id });
+        res.status(200).json(comments);
+
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error fetching comments', error: error.message });
+    }
+}
+
+// Delete a comment by id
+exports.deleteComment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const comment = await Comment.findByIdAndDelete(id);
+        if (!comment) {
+            console.log('Comment not found');
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+        res.status(200).json({ message: 'Comment deleted successfully' });
+    } catch (error) {
+        console.error(error);  // Log the full error for debugging
+        res.status(500).json({ message: 'Error deleting comment', error: error.message });
+    }
+}
+

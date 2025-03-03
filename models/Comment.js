@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const commentSchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   car_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: true },
+  user_name: {    type: String, required: true},
   content: { type: String, required: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
   timestamp: { type: Date, default: Date.now }

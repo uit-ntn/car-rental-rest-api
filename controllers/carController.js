@@ -1,5 +1,6 @@
 const Car = require('../models/Car');
 const Rental = require('../models/Rental');
+const Comment = require('../models/Comment');
 
 // Create a new car
 exports.createCar = async (req, res) => {
@@ -85,8 +86,12 @@ exports.deleteCar = async (req, res) => {
     const rentals = await Rental.find({ car_id: req.params.id });
     rentals.forEach(async (rental) => {
       await Rental.findByIdAndDelete(rental._id);
-    }
-    );
+    });
+
+    const comments = await Comment.find({ car_id: req.params.id });
+    comments.forEach(async (comment) => {
+      await Comment.findByIdAndDelete(comment._id);
+    });
     await Car.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Car deleted successfully' });
   } catch (error) {
