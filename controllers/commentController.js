@@ -5,25 +5,15 @@ const User = require('../models/User');
 // Create a new comment
 exports.createComment = async (req, res) => {
     try {
+        console.log("📩 Request nhận từ FE:", req.body); // Kiểm tra dữ liệu nhận được
+
         const { user_id, car_id, content, rating, user_name } = req.body;
 
-        // Check if the car and user exist
-        const car = await Car.findById(car_id);
-        const user = await User.findById(user_id);
-        if (!car || !user) {
-            if (!car) console.log(`Car : ${car_id}  not found`);
-            if (!user) console.log(`User ${user_id} not found`);
-            console.log('Car or user not found');
-            return res.status(404).json({ message: 'Car or user not found' });
+        if (!content || content.trim() === "") {
+            console.log("❌ Lỗi: content rỗng hoặc không hợp lệ!");
+            return res.status(400).json({ message: "Nội dung bình luận không được để trống" });
         }
 
-        // Check if the rating is valid
-        if (rating < 1 || rating > 5) {
-            console.log('Invalid rating');
-            return res.status(400).json({ message: 'Invalid rating' });
-        }
-
-        // Create comment
         const comment = new Comment({
             user_id,
             car_id,
@@ -32,15 +22,14 @@ exports.createComment = async (req, res) => {
             user_name
         });
 
-        // Save comment
         await comment.save();
-
-        res.status(201).json({ message: 'Comment created successfully', comment });
+        res.status(201).json({ message: "Comment created successfully", comment });
     } catch (error) {
-        console.error(error);  // Log the full error for debugging
-        res.status(500).json({ message: 'Error creating comment', error: error.message });
+        console.error("❌ Lỗi tạo comment:", error);
+        res.status(500).json({ message: "Error creating comment", error: error.message });
     }
-}
+};
+
 
 
 // Get all comments
@@ -73,13 +62,12 @@ exports.deleteComment = async (req, res) => {
         const { id } = req.params;
         const comment = await Comment.findByIdAndDelete(id);
         if (!comment) {
-            console.log('Comment not found');
-            return res.status(404).json({ message: 'Comment not found' });
+            return res.status(404).json({ message: 'Bình luận không tồn tại' });
         }
-        res.status(200).json({ message: 'Comment deleted successfully' });
+        res.status(200).json({ message: 'Bình luận đã được xóa' });
     } catch (error) {
-        console.error(error);  // Log the full error for debugging
-        res.status(500).json({ message: 'Error deleting comment', error: error.message });
+        res.status(500).json({ message: 'Lỗi khi xóa bình luận', error: error.message });
     }
 }
+
 
