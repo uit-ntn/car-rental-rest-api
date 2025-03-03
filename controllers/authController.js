@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const sentMail = require('../configs/mailer');
 const jwt = require('jsonwebtoken');
+const exp = require('constants');
 
 exports.signup = async (req, res) => {
   const { email, password } = req.body;
@@ -98,3 +99,38 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+
+exports.updatePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  try {
+    // Lấy token từ headers
+    const token = req.headers.authorization?.split(" ")[1]; 
+    if (!token) {
+      return res.status(401).json({ message: "Không có quyền truy cập" });
+    }
+
+    // Giải mã token để lấy user ID
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.user_id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+
+    // So sánh mật khẩu cũ
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Mật khẩu cũ không đúng' });
+    }
+
+    // Mã hóa mật khẩu mới và cập nhật
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Đổi mật khẩu thành công' });
+  } catch (error) {
+    console.error(`Error in updatePassword: ${error.message}`);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
